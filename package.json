@@ -1,0 +1,16 @@
+{
+  "name": "elevator-waiting-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:js": "node --check script.js",
+    "build:wasm": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-wasm.ps1",
+    "test:rust": "cargo test",
+    "test:wasm": "node tests/wasm-contract.mjs",
+    "test": "npm run check:js && npm run test:rust && npm run test:wasm"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

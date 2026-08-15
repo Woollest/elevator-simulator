@@ -4,6 +4,8 @@
 
 公開版: https://woollest.github.io/elevator-simulator/
 
+[![Control system quality gate](https://github.com/Woollest/elevator-simulator/actions/workflows/quality.yml/badge.svg)](https://github.com/Woollest/elevator-simulator/actions/workflows/quality.yml)
+
 ## 体験できること
 
 - エレベーターは呼び出しがなくても1階から20階まで自動運転します
@@ -20,6 +22,8 @@
 - `prefers-reduced-motion` が有効な環境では扉アニメーションを短縮します
 
 ## 技術構成
+
+詳細な境界、制御不変条件、検証方針は [`ARCHITECTURE.md`](ARCHITECTURE.md) に記録しています。Rust/Wasm採用の判断経緯は [`docs/adr/0001-rust-wasm-control-core.md`](docs/adr/0001-rust-wasm-control-core.md) にあります。
 
 ### React
 
@@ -51,6 +55,12 @@ WebAssemblyが読み込めなかった場合も、同じ判断を行うJavaScrip
 
 ```text
 .
+├── .github/workflows/ # 自動品質ゲート
+├── docs/adr/          # Architecture Decision Records
+├── scripts/           # 再現可能なWasmビルド
+├── tests/             # 配信WasmのABI・決定表テスト
+├── ARCHITECTURE.md    # 実行境界と制御不変条件
+├── Cargo.toml         # Rustクレート定義と最適化設定
 ├── index.html          # GitHub Pagesの入口
 ├── style.css           # ホール全体の外観とレスポンシブ表示
 ├── script.js           # React UI、運転状態、音声、アニメーション
@@ -72,20 +82,21 @@ python -m http.server 8000
 
 ## Rustコアを再ビルドする
 
-Rustと `wasm32-unknown-unknown` ターゲットが必要です。
+Rustと `wasm32-unknown-unknown` ターゲットが必要です。Windowsでは次を実行します。
 
 ```sh
-rustup target add wasm32-unknown-unknown
-rustc --target wasm32-unknown-unknown \
-  --crate-type cdylib \
-  -C opt-level=z \
-  -C panic=abort \
-  -C strip=symbols \
-  elevator_core.rs \
-  -o elevator_core.wasm
+npm run build:wasm
 ```
 
-標準ライブラリを使わない小さなコアなので、生成されるWasmは非常に軽量です。
+macOS／Linuxでは `sh scripts/build-wasm.sh` を使用します。標準ライブラリを使わない小さなコアなので、生成されるWasmは169バイトです。ビルドスクリプトとテストは4KiBの上限を強制します。
+
+## 品質ゲート
+
+```sh
+npm test
+```
+
+この1コマンドでJavaScript構文確認、Rust単体テスト、配信Wasmの全8状態決定表、エクスポートABI、バイナリサイズを検証します。GitHub ActionsではさらにWasmをゼロから再生成し、コミット済みバイナリと完全一致することを確認します。
 
 ## 調整ポイント
 
