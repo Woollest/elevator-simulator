@@ -181,6 +181,8 @@ body {
 .door span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.28); box-shadow: 2px 0 7px rgba(0,0,0,.15); }
 .door--left { left: 3.4%; width: 46.6%; border-right: 1px solid #5e615f; } .door--left span { right: 12%; }
 .door--right { right: 3.4%; width: 46.6%; border-left: 1px solid #d4d5d2; } .door--right span { left: 12%; }
+.door--left { transition-duration: calc(var(--door-open-time) + .09s); }
+.door--right { transition-duration: calc(var(--door-open-time) - .04s); }
 .door-frame.open .door--left { transform: translateX(-100%); }
 .door-frame.open .door--right { transform: translateX(100%); }
 .door-shadow { position: absolute; z-index: 7; top: 0; bottom: 0; left: 50%; width: 7px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(0,0,0,.7), transparent); opacity: .75; transition: opacity .35s; }

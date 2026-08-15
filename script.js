@@ -25,7 +25,7 @@ function App() {
   const [noticeLevel, setNoticeLevel] = useState('');
   const [displayTick, setDisplayTick] = useState(0);
   const callsRef = useRef(calls), floorRef = useRef(floor), directionRef = useRef(direction);
-  const runningRef = useRef(false), aliveRef = useRef(true), pressesRef = useRef([]), audioRef = useRef(null), audioGraphRef = useRef(null), noticeTimerRef = useRef(null);
+  const runningRef = useRef(false), aliveRef = useRef(true), npcLoopRef = useRef(false), pressesRef = useRef([]), audioRef = useRef(null), audioGraphRef = useRef(null), noticeTimerRef = useRef(null);
   useEffect(() => { callsRef.current = calls; }, [calls]);
   useEffect(() => { floorRef.current = floor; }, [floor]);
   useEffect(() => { directionRef.current = direction; }, [direction]);
@@ -56,6 +56,7 @@ function App() {
     motorNoise.connect(motorFilter).connect(motorGain).connect(master); motorNoise.start();
     audioGraphRef.current = { motorFilter, motorGain };
     updateMotorSound(floorRef.current, true);
+    startNpcPresence();
   }
   function updateMotorSound(currentFloor, isMoving) {
     const context = audioRef.current, graph = audioGraphRef.current; if (!context || !graph) return;
@@ -78,6 +79,51 @@ function App() {
     gain.gain.setValueAtTime(.0001, now); gain.gain.linearRampToValueAtTime(Math.max(.006, .024 - distance * .0015), now + .25); gain.gain.exponentialRampToValueAtTime(.0001, now + 1.3);
     source.connect(filter).connect(gain).connect(panner).connect(context.destination); source.start(now); source.stop(now + 1.4);
   }
+  function noiseEvent({ at = 0, duration = .18, frequency = 700, gainValue = .025, pan = 0, type = 'bandpass' } = {}) {
+    const context = audioRef.current; if (!context || context.state !== 'running') return;
+    const source = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain(), panner = context.createStereoPanner(), now = context.currentTime + at;
+    source.buffer = noiseBuffer(context, Math.max(duration, .25)); filter.type = type; filter.frequency.value = frequency; filter.Q.value = 1.1; panner.pan.value = pan;
+    gain.gain.setValueAtTime(.0001, now); gain.gain.linearRampToValueAtTime(gainValue, now + Math.min(.035, duration / 4)); gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+    source.connect(filter).connect(gain).connect(panner).connect(context.destination); source.start(now); source.stop(now + duration + .02);
+  }
+  function footsteps(pan = Math.random() > .5 ? .72 : -.72, count = 5) {
+    for (let i = 0; i < count; i += 1) noiseEvent({ at: i * .48, duration: .13, frequency: 190 + i * 18, gainValue: .012 + i * .003, pan: pan * (1 - i / (count + 2)) });
+  }
+  function cough(pan = Math.random() * 1.4 - .7) {
+    noiseEvent({ duration: .28, frequency: 520, gainValue: .03, pan });
+    noiseEvent({ at: .31, duration: .21, frequency: 430, gainValue: .021, pan });
+  }
+  function clothRustle(pan = Math.random() * 1.2 - .6) {
+    noiseEvent({ duration: .65, frequency: 1250, gainValue: .012, pan, type: 'highpass' });
+  }
+  function sensorBeep() {
+    const context = audioRef.current; if (!context || context.state !== 'running') return;
+    const oscillator = context.createOscillator(), gain = context.createGain(), now = context.currentTime;
+    oscillator.type = 'sine'; oscillator.frequency.value = 1760; gain.gain.setValueAtTime(.035, now); gain.gain.exponentialRampToValueAtTime(.0001, now + .11);
+    oscillator.connect(gain).connect(context.destination); oscillator.start(now); oscillator.stop(now + .12);
+  }
+  function mechanicalClunk() {
+    noiseEvent({ duration: .1, frequency: 115, gainValue: .04, pan: 0 });
+    noiseEvent({ at: .09, duration: .07, frequency: 260, gainValue: .018, pan: .08 });
+  }
+  function registerCall(name) {
+    if (callsRef.current[name]) return;
+    const nextCalls = { ...callsRef.current, [name]: true }; callsRef.current = nextCalls; setCalls(nextCalls);
+  }
+  async function startNpcPresence() {
+    if (npcLoopRef.current) return; npcLoopRef.current = true;
+    while (aliveRef.current) {
+      await sleep(9000 + Math.random() * 15000);
+      if (!aliveRef.current) break;
+      const event = Math.random();
+      if (event < .46) {
+        const side = Math.random() > .5 ? .75 : -.75; footsteps(side, 5 + Math.floor(Math.random() * 3));
+        await sleep(2100 + Math.random() * 900); clothRustle(side * .35);
+        registerCall(Math.random() > .5 ? 'up' : 'down');
+      } else if (event < .72) cough();
+      else clothRustle();
+    }
+  }
   function warningBeep() {
     const context = audioRef.current; if (!context || context.state !== 'running') return;
     [0, .24].forEach(offset => { const oscillator = context.createOscillator(), gain = context.createGain(), at = context.currentTime + offset; oscillator.type = 'square'; oscillator.frequency.value = 740; gain.gain.setValueAtTime(.055, at); gain.gain.exponentialRampToValueAtTime(.0001, at + .13); oscillator.connect(gain).connect(context.destination); oscillator.start(at); oscillator.stop(at + .14); });
@@ -97,9 +143,7 @@ function App() {
       showNotice('呼び出しは、すでに登録されています。', 'warning');
     }
     if (!callsRef.current[name]) {
-      const nextCalls = { ...callsRef.current, [name]: true };
-      callsRef.current = nextCalls;
-      setCalls(nextCalls);
+      registerCall(name);
     }
   }
   async function runController() {
@@ -116,7 +160,14 @@ function App() {
           setMoving(false); await sleep(600); chime(.14, 0, false); await sleep(720); setDoorsOpen(true);
           const served = directionRef.current > 0 ? 'up' : 'down';
           const remaining = { ...callsRef.current, [served]: false }; callsRef.current = remaining; setCalls(remaining);
-          await sleep(4200); setDoorsOpen(false); await sleep(1750);
+          await sleep(3200);
+          if (Math.random() < .32) { footsteps(Math.random() > .5 ? .55 : -.55, 4); await sleep(1800 + Math.random() * 1800); }
+          setDoorsOpen(false);
+          if (Math.random() < .3) {
+            await sleep(780 + Math.random() * 260); sensorBeep(); setDoorsOpen(true);
+            await sleep(1800); clothRustle(); await sleep(1800 + Math.random() * 2200); setDoorsOpen(false);
+          }
+          await sleep(1800); mechanicalClunk();
           setMoving(true);
         } else {
           await sleep(650);
@@ -131,7 +182,9 @@ function App() {
         chime(Math.max(.012, .052 - distance * .003), side, true);
         await sleep(520);
         distantDoorSound(distance, side);
-        await sleep(2700 + Math.random() * 3000);
+        const crowded = Math.random() < .28;
+        if (crowded) { clothRustle(side); await sleep(1700); distantDoorSound(distance, -side); }
+        await sleep(crowded ? 6500 + Math.random() * 4500 : 2700 + Math.random() * 3000);
         setMoving(true);
       }
     }
