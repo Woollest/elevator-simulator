@@ -32,7 +32,8 @@ flowchart LR
 4. Two simultaneous calls are independent and are cleared independently.
 5. Audio availability never changes dispatch behavior.
 6. The compiled Wasm control core must remain below 4 KiB.
+7. Every build uses the repository-pinned Rust 1.96.1 toolchain.
 
 ## Verification strategy
 
-The Rust unit tests verify source semantics. The Node contract test loads the exact committed Wasm artifact, checks every row in the decision table, validates its exported ABI and enforces the binary-size budget. CI then rebuilds the artifact and rejects a non-reproducible binary.
+The Rust unit tests verify source semantics. The Node contract test loads the exact committed Wasm artifact, checks every row in the decision table, validates its exported ABI and enforces the binary-size budget. CI uses the same repository-pinned compiler as local builds, rebuilds the artifact and rejects a non-reproducible binary.

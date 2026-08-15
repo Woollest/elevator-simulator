@@ -96,7 +96,7 @@ macOS／Linuxでは `sh scripts/build-wasm.sh` を使用します。標準ライ
 npm test
 ```
 
-この1コマンドでJavaScript構文確認、Rust単体テスト、配信Wasmの全8状態決定表、エクスポートABI、バイナリサイズを検証します。GitHub ActionsではさらにWasmをゼロから再生成し、コミット済みバイナリと完全一致することを確認します。
+この1コマンドでJavaScript構文確認、Rust単体テスト、配信Wasmの全8状態決定表、エクスポートABI、バイナリサイズを検証します。Rustは `rust-toolchain.toml` により1.96.1へ固定されています。GitHub Actionsでも同じコンパイラを使ってWasmをゼロから再生成し、コミット済みバイナリと完全一致することを確認します。
 
 ## 調整ポイント
 
