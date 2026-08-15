@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   root: 'apps/web',
   base: '/elevator-simulator/',
-  publicDir: '../../public',
+  publicDir: 'public',
   plugins: [react()],
   build: {
     outDir: '../../dist',

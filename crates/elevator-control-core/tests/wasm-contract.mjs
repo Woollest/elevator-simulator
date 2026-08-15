@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const bytes = await readFile(new URL('../elevator_core.wasm', import.meta.url));
+const bytes = await readFile(new URL('../../../apps/web/public/elevator_core.wasm', import.meta.url));
 const { instance } = await WebAssembly.instantiate(bytes);
 const { should_stop: shouldStop, served_call: servedCall } = instance.exports;
 

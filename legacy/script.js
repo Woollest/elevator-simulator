@@ -5,7 +5,7 @@ import htm from 'https://esm.sh/htm@3.1.1';
 const html = htm.bind(React.createElement);
 const HALL_FLOOR = 12, MIN_FLOOR = 1, MAX_FLOOR = 20;
 let rustCore = null;
-WebAssembly.instantiateStreaming(fetch('./elevator_core.wasm')).then(({ instance }) => { rustCore = instance.exports; }).catch(() => {});
+WebAssembly.instantiateStreaming(fetch('./legacy/elevator_core.wasm')).then(({ instance }) => { rustCore = instance.exports; }).catch(() => {});
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const randomFloor = () => {
   const choices = Array.from({ length: MAX_FLOOR }, (_, i) => i + 1).filter(value => value !== HALL_FLOOR);

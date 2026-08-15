@@ -34,10 +34,10 @@ jobs:
       - name: Run native decision-table tests
         run: cargo test --locked
       - name: Rebuild the WebAssembly control core
-        run: sh scripts/build-wasm.sh
+        run: sh crates/elevator-control-core/scripts/build-wasm.sh
       - name: Verify JavaScript and Wasm ABI contract
         run: npm test
       - name: Build production frontend
         run: npm run build
       - name: Verify reproducible Wasm artifact
-        run: git diff --exit-code -- elevator_core.wasm public/elevator_core.wasm
+        run: git diff --exit-code -- legacy/elevator_core.wasm apps/web/public/elevator_core.wasm

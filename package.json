@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "check:js": "node --check script.js",
-    "check:types": "tsc -b --pretty false",
-    "build:wasm": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-wasm.ps1",
+    "dev": "vite --config apps/web/vite.config.ts --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts",
+    "check:js": "node --check legacy/script.js",
+    "check:types": "tsc --noEmit --pretty false",
+    "build:wasm": "powershell -NoProfile -ExecutionPolicy Bypass -File crates/elevator-control-core/scripts/build-wasm.ps1",
     "test:rust": "cargo test",
-    "test:wasm": "node tests/wasm-contract.mjs",
-    "test:unit": "vitest run",
+    "test:wasm": "node crates/elevator-control-core/tests/wasm-contract.mjs",
+    "test:unit": "vitest run --config apps/web/vite.config.ts",
     "test": "npm run check:js && npm run check:types && npm run test:unit && npm run test:rust && npm run test:wasm"
   },
   "dependencies": {

@@ -73,22 +73,23 @@ WebAssemblyが読み込めなかった場合も、同じ判断を行うJavaScrip
 │   │   ├── simulation/    # 自動運転・NPC・扉の状態遷移
 │   │   ├── styles/        # ホールの外観
 │   │   └── ui/            # React表示コンポーネント
-│   └── index.html         # Viteエントリ
+│   ├── public/            # Web配信用Wasm
+│   ├── index.html         # Viteエントリ
+│   └── vite.config.ts     # Webのビルド・テスト設定
 ├── crates/
-│   └── elevator-control-core/ # Rust制御クレート
+│   └── elevator-control-core/
+│       ├── scripts/       # 再現可能なWasmビルド
+│       ├── src/           # Rust制御コア
+│       └── tests/         # 配信WasmのABI・決定表テスト
 ├── docs/
 │   ├── ARCHITECTURE.md # 実行境界と制御不変条件
 │   └── adr/            # Architecture Decision Records
-├── scripts/           # 再現可能なWasmビルド
-├── tests/             # 配信WasmのABI・決定表テスト
 ├── Cargo.toml         # Rustワークスペース
-├── index.html         # 公開互換用の旧エントリ
-├── style.css          # 公開互換用の旧スタイル
-├── script.js          # 公開互換用の旧ランタイム
-└── elevator_core.wasm # 公開互換用のWasm
+├── legacy/            # 現在のブランチ配信用互換層
+└── index.html         # 互換層を読み込む最小エントリ
 ```
 
-> ルートの `index.html`、`script.js`、`style.css` は現在のブランチ配信を維持するための凍結済み互換層です。新規変更は `apps/web` に行います。詳細は [`docs/LEGACY.md`](docs/LEGACY.md) を参照してください。
+> ルートの `index.html` と `legacy/` は現在のブランチ配信を維持するための凍結済み互換層です。新規変更は `apps/web` に行います。詳細は [`docs/LEGACY.md`](docs/LEGACY.md) を参照してください。
 
 ## ローカルで確認する
 
@@ -109,7 +110,7 @@ Rustと `wasm32-unknown-unknown` ターゲットが必要です。Windowsでは�
 npm run build:wasm
 ```
 
-macOS／Linuxでは `sh scripts/build-wasm.sh` を使用します。標準ライブラリを使わない小さなコアなので、生成されるWasmは169バイトです。ビルドスクリプトとテストは4KiBの上限を強制します。
+macOS／Linuxでは `sh crates/elevator-control-core/scripts/build-wasm.sh` を使用します。標準ライブラリを使わない小さなコアなので、生成されるWasmは169バイトです。ビルドスクリプトとテストは4KiBの上限を強制します。
 
 ## 品質ゲート
 
