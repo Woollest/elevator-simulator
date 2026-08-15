@@ -67,11 +67,17 @@ function App() {
           await sleep(4200); setDoorsOpen(false); await sleep(1750);
           if (!(remaining.up || remaining.down)) break; setMoving(true);
         } else {
-          showNotice(directionRef.current > 0 ? '上り運転中のため、下り呼びを通過しました。' : '下り運転中のため、上り呼びを通過しました。'); await sleep(650);
+          await sleep(650);
         }
       }
       if (next === target) { await sleep(1300 + Math.random() * 1200); directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; }
-      else if (Math.random() < .12 && Math.abs(next - HALL_FLOOR) > 1) await sleep(1100 + Math.random() * 1700);
+      else if (Math.random() < .2 && Math.abs(next - HALL_FLOOR) > 1) {
+        // The car has stopped at another floor for passengers. From the hall,
+        // only the stationary floor display and the natural dwell time are seen.
+        setMoving(false);
+        await sleep(2300 + Math.random() * 2600);
+        setMoving(true);
+      }
     }
     setMoving(false); runningRef.current = false;
   }
