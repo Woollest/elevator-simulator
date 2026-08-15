@@ -24,10 +24,14 @@ function App() {
   const [notice, setNotice] = useState('');
   const [displayTick, setDisplayTick] = useState(0);
   const callsRef = useRef(calls), floorRef = useRef(floor), directionRef = useRef(direction);
-  const runningRef = useRef(false), pressesRef = useRef([]), audioRef = useRef(null), noticeTimerRef = useRef(null);
+  const runningRef = useRef(false), aliveRef = useRef(true), pressesRef = useRef([]), audioRef = useRef(null), noticeTimerRef = useRef(null);
   useEffect(() => { callsRef.current = calls; }, [calls]);
   useEffect(() => { floorRef.current = floor; }, [floor]);
   useEffect(() => { directionRef.current = direction; }, [direction]);
+  useEffect(() => {
+    runController();
+    return () => { aliveRef.current = false; };
+  }, []);
 
   function unlockAudio() {
     if (!audioRef.current) { const Ctx = window.AudioContext || window.webkitAudioContext; if (Ctx) audioRef.current = new Ctx(); }
@@ -49,12 +53,12 @@ function App() {
       callsRef.current = nextCalls;
       setCalls(nextCalls);
     }
-    if (!runningRef.current) runController();
   }
   async function runController() {
+    if (runningRef.current) return;
     runningRef.current = true; setMoving(true);
     let target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR;
-    while (callsRef.current.up || callsRef.current.down) {
+    while (aliveRef.current) {
       await sleep(1350 + Math.random() * 750);
       const next = floorRef.current + directionRef.current;
       if (next > MAX_FLOOR || next < MIN_FLOOR) { directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; await sleep(1100); continue; }
@@ -65,7 +69,7 @@ function App() {
           const served = directionRef.current > 0 ? 'up' : 'down';
           const remaining = { ...callsRef.current, [served]: false }; callsRef.current = remaining; setCalls(remaining);
           await sleep(4200); setDoorsOpen(false); await sleep(1750);
-          if (!(remaining.up || remaining.down)) break; setMoving(true);
+          setMoving(true);
         } else {
           await sleep(650);
         }
