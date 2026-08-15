@@ -59,7 +59,7 @@ body {
 
 .elevator {
   position: absolute; z-index: 3; left: 50%; bottom: 9%;
-  width: min(67vw, 690px); height: min(87vh, 850px);
+  width: min(67vw, 690px); height: min(78vh, calc(100vh - 150px), 850px);
   transform: translateX(-50%);
 }
 
@@ -180,7 +180,7 @@ body {
 .sound-hint.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 720px) {
-  .elevator { width: min(82vw, 510px); height: min(78vh, 700px); bottom: 8%; }
+  .elevator { width: min(82vw, 510px); height: min(72vh, calc(100vh - 125px), 700px); bottom: 8%; }
   .call-panel { left: auto; right: max(5px, 2vw); bottom: 39%; transform: scale(.82); }
   .baseboard { bottom: 7.4%; }
   .floor { height: 20%; }
@@ -189,8 +189,28 @@ body {
   .direction { font-size: 21px; }
 }
 
+@media (orientation: landscape) and (max-height: 720px) {
+  .elevator {
+    bottom: 7%;
+    width: min(58vw, 610px);
+    height: min(72vh, calc(100vh - 128px));
+  }
+
+  .indicator-housing {
+    top: -7%;
+    width: 128px;
+    height: 55px;
+  }
+
+  .floor-number { font-size: 29px; }
+  .direction { font-size: 20px; }
+  .call-panel { left: calc(50% + min(32vw, 335px)); bottom: 41%; transform: scale(.85); }
+  .baseboard { bottom: 6.4%; }
+  .floor { height: 18%; }
+}
+
 @media (max-width: 420px) {
-  .elevator { width: 86vw; height: min(74vh, 620px); }
+  .elevator { width: 86vw; height: min(68vh, calc(100vh - 110px), 620px); }
   .call-panel { right: -7px; transform: scale(.69); }
 }
 
