@@ -1,2 +1,5 @@
 *.zip
 /target/
+/dist/
+/node_modules/
+*.tsbuildinfo

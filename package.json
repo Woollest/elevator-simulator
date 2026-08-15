@@ -4,13 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
     "check:js": "node --check script.js",
+    "check:types": "tsc -b --pretty false",
     "build:wasm": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-wasm.ps1",
     "test:rust": "cargo test",
     "test:wasm": "node tests/wasm-contract.mjs",
-    "test": "npm run check:js && npm run test:rust && npm run test:wasm"
+    "test:unit": "vitest run",
+    "test": "npm run check:js && npm run check:types && npm run test:unit && npm run test:rust && npm run test:wasm"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "vite": "8.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }

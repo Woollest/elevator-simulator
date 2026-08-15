@@ -20,6 +20,7 @@ flowchart LR
 | Boundary | Responsibility | Failure behavior |
 | --- | --- | --- |
 | React coordinator | Long-running car loop, hall calls, doors and warnings | Page remains visually stable |
+| TypeScript domain | Shared directions, call types, timing and probability configuration | Compile-time rejection of invalid states |
 | Rust/Wasm core | Pure collective-control stop decision | Equivalent JavaScript fallback |
 | Web Audio graph | Procedural ambience and spatial events | Simulation remains fully usable when muted |
 | CSS environment | Physical materials, lighting and responsive composition | Reduced-motion preference shortens doors |
@@ -36,4 +37,4 @@ flowchart LR
 
 ## Verification strategy
 
-The Rust unit tests verify source semantics. The Node contract test loads the exact committed Wasm artifact, checks every row in the decision table, validates its exported ABI and enforces the binary-size budget. CI uses the same repository-pinned compiler as local builds, rebuilds the artifact and rejects a non-reproducible binary.
+Vitest verifies the typed JavaScript fallback decision table. Rust unit tests verify source semantics. The Node contract test loads the exact committed Wasm artifact, checks every row in the decision table, validates its exported ABI and enforces the binary-size budget. CI type-checks and bundles the frontend, then uses the same repository-pinned compiler as local builds to reject a non-reproducible Wasm binary.

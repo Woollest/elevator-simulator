@@ -32,7 +32,11 @@
 
 ### React
 
-画面描画、呼び出し状態、階数、進行方向、扉、注意表示をReact 19で管理しています。ビルド工程を不要にするため、React・React DOM・htmはES Modulesとして読み込みます。
+画面描画、呼び出し状態、階数、進行方向、扉、注意表示をReact 19.2で管理しています。画面部品とシミュレーションロジックを分離し、Strict Modeで実行します。
+
+### TypeScript / Vite
+
+アプリケーションソースはTypeScript 7のstrictモードで型検査し、Vite 8で本番用にバンドルします。設定値、ドメイン型、Rust/Wasm境界、音響エンジン、シミュレーションフック、表示コンポーネントは個別モジュールです。VitestがJavaScriptフォールバックの全決定表を検証します。
 
 ### Rust / WebAssembly
 
@@ -63,10 +67,17 @@ WebAssemblyが読み込めなかった場合も、同じ判断を行うJavaScrip
 ├── .github/workflows/ # 自動品質ゲート
 ├── docs/adr/          # Architecture Decision Records
 ├── scripts/           # 再現可能なWasmビルド
+├── src/
+│   ├── audio/         # Web Audio合成エンジン
+│   ├── domain/        # 型とシミュレーション設定
+│   ├── infrastructure/# Rust/Wasm境界
+│   ├── simulation/    # 自動運転・NPC・扉の状態遷移
+│   └── ui/            # React表示コンポーネント
 ├── tests/             # 配信WasmのABI・決定表テスト
+├── web/               # Vite用HTMLエントリ
 ├── ARCHITECTURE.md    # 実行境界と制御不変条件
 ├── Cargo.toml         # Rustクレート定義と最適化設定
-├── index.html          # GitHub Pagesの入口
+├── index.html          # 移行中も公開を維持する旧エントリ
 ├── style.css           # ホール全体の外観とレスポンシブ表示
 ├── script.js           # React UI、運転状態、音声、アニメーション
 ├── elevator_core.rs    # Rust製の停止判断ロジック
@@ -75,15 +86,14 @@ WebAssemblyが読み込めなかった場合も、同じ判断を行うJavaScrip
 
 ## ローカルで確認する
 
-ES ModulesとWebAssemblyを使用しているため、`index.html` を直接開くのではなくHTTPサーバー経由で確認してください。
-
-例:
+依存関係を導入し、Viteの開発サーバーを起動します。
 
 ```sh
-python -m http.server 8000
+npm install
+npm run dev
 ```
 
-その後、`http://localhost:8000/` を開きます。
+本番用成果物は `npm run build` で `dist/` に生成されます。
 
 ## Rustコアを再ビルドする
 
@@ -101,7 +111,7 @@ macOS／Linuxでは `sh scripts/build-wasm.sh` を使用します。標準ライ
 npm test
 ```
 
-この1コマンドでJavaScript構文確認、Rust単体テスト、配信Wasmの全8状態決定表、エクスポートABI、バイナリサイズを検証します。Rustは `rust-toolchain.toml` により1.96.1へ固定されています。GitHub Actionsでも同じコンパイラを使ってWasmをゼロから再生成し、コミット済みバイナリと完全一致することを確認します。
+この1コマンドで旧エントリのJavaScript構文、TypeScriptの型、Vitestの決定表、Rust単体テスト、配信Wasmの全8状態決定表、エクスポートABI、バイナリサイズを検証します。Rustは `rust-toolchain.toml` により1.96.1へ固定されています。GitHub Actionsでも同じコンパイラを使ってWasmをゼロから再生成し、コミット済みバイナリと完全一致することを確認します。
 
 ## 調整ポイント
 

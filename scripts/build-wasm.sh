@@ -4,6 +4,8 @@ set -eu
 rustup target add wasm32-unknown-unknown
 cargo build --release --target wasm32-unknown-unknown
 cp target/wasm32-unknown-unknown/release/elevator_control_core.wasm elevator_core.wasm
+mkdir -p public
+cp elevator_core.wasm public/elevator_core.wasm
 
 size=$(wc -c < elevator_core.wasm)
 if [ "$size" -gt 4096 ]; then
