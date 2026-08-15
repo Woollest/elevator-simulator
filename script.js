@@ -1,139 +1,86 @@
-(() => {
-  'use strict';
+import React, { useEffect, useRef, useState } from 'https://esm.sh/react@19.1.1';
+import { createRoot } from 'https://esm.sh/react-dom@19.1.1/client';
+import htm from 'https://esm.sh/htm@3.1.1';
 
-  const CURRENT_FLOOR = 12;
-  const floorDisplay = document.getElementById('floorDisplay');
-  const directionDisplay = document.getElementById('directionDisplay');
-  const callButton = document.getElementById('callButton');
-  const doorFrame = document.getElementById('doorFrame');
-  const soundHint = document.getElementById('soundHint');
+const html = htm.bind(React.createElement);
+const HALL_FLOOR = 12, MIN_FLOOR = 1, MAX_FLOOR = 20;
+let rustCore = null;
+WebAssembly.instantiateStreaming(fetch('./elevator_core.wasm')).then(({ instance }) => { rustCore = instance.exports; }).catch(() => {});
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const randomFloor = () => {
+  const choices = Array.from({ length: MAX_FLOOR }, (_, i) => i + 1).filter(value => value !== HALL_FLOOR);
+  return choices[Math.floor(Math.random() * choices.length)];
+};
+const shouldStop = (direction, up, down) => rustCore
+  ? rustCore.should_stop(direction, Number(up), Number(down)) === 1
+  : (direction > 0 ? up : down);
 
-  let floor = randomFloor();
-  let state = 'idle';
-  let audioContext = null;
-  let runToken = 0;
-
-  function randomFloor() {
-    const options = Array.from({ length: 19 }, (_, index) => index + 1)
-      .filter(value => value !== CURRENT_FLOOR);
-    return options[Math.floor(Math.random() * options.length)];
-  }
-
-  function delay(ms) {
-    return new Promise(resolve => window.setTimeout(resolve, ms));
-  }
-
-  function renderFloor(value) {
-    floorDisplay.textContent = value === 0 ? 'B1' : String(value);
-    floorDisplay.classList.remove('changing');
-    void floorDisplay.offsetWidth;
-    floorDisplay.classList.add('changing');
-  }
-
-  function setDirection(targetFloor, active = true) {
-    directionDisplay.textContent = targetFloor > floor ? '▲' : '▼';
-    directionDisplay.classList.toggle('idle', !active);
-  }
+function App() {
+  const [floor, setFloor] = useState(randomFloor);
+  const [direction, setDirection] = useState(Math.random() > .5 ? 1 : -1);
+  const [moving, setMoving] = useState(false);
+  const [doorsOpen, setDoorsOpen] = useState(false);
+  const [calls, setCalls] = useState({ up: false, down: false });
+  const [notice, setNotice] = useState('');
+  const [displayTick, setDisplayTick] = useState(0);
+  const callsRef = useRef(calls), floorRef = useRef(floor), directionRef = useRef(direction);
+  const runningRef = useRef(false), pressesRef = useRef([]), audioRef = useRef(null), noticeTimerRef = useRef(null);
+  useEffect(() => { callsRef.current = calls; }, [calls]);
+  useEffect(() => { floorRef.current = floor; }, [floor]);
+  useEffect(() => { directionRef.current = direction; }, [direction]);
 
   function unlockAudio() {
-    if (!audioContext) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) audioContext = new AudioCtx();
-    }
-    if (audioContext?.state === 'suspended') audioContext.resume();
+    if (!audioRef.current) { const Ctx = window.AudioContext || window.webkitAudioContext; if (Ctx) audioRef.current = new Ctx(); }
+    audioRef.current?.resume();
   }
-
-  function playChime() {
-    if (!audioContext || audioContext.state !== 'running') {
-      soundHint.classList.add('show');
-      window.setTimeout(() => soundHint.classList.remove('show'), 2200);
-      return;
-    }
-
-    const now = audioContext.currentTime;
-    const master = audioContext.createGain();
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
-    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.65);
-    master.connect(audioContext.destination);
-
-    [659.25, 987.77].forEach((frequency, index) => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, now);
-      gain.gain.setValueAtTime(index === 0 ? 0.75 : 0.24, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + (index === 0 ? 1.5 : 1.0));
-      oscillator.connect(gain).connect(master);
-      oscillator.start(now);
-      oscillator.stop(now + 1.7);
-    });
+  function chime() {
+    const context = audioRef.current; if (!context || context.state !== 'running') return;
+    const now = context.currentTime, master = context.createGain();
+    master.gain.setValueAtTime(.0001, now); master.gain.exponentialRampToValueAtTime(.14, now + .02); master.gain.exponentialRampToValueAtTime(.0001, now + 1.55); master.connect(context.destination);
+    [659.25, 987.77].forEach((frequency, index) => { const oscillator = context.createOscillator(), gain = context.createGain(); oscillator.frequency.value = frequency; gain.gain.setValueAtTime(index ? .22 : .72, now); gain.gain.exponentialRampToValueAtTime(.001, now + (index ? .9 : 1.45)); oscillator.connect(gain).connect(master); oscillator.start(now); oscillator.stop(now + 1.6); });
   }
-
-  async function travel(token) {
-    state = 'moving';
-    callButton.classList.add('lit');
-    callButton.setAttribute('aria-pressed', 'true');
-    callButton.disabled = true;
-    setDirection(CURRENT_FLOOR, true);
-
-    while (floor !== CURRENT_FLOOR && token === runToken) {
-      const distance = Math.abs(CURRENT_FLOOR - floor);
-      const pauseChance = distance > 2 ? 0.18 : 0;
-      await delay(850 + Math.random() * 620);
-
-      if (Math.random() < pauseChance) {
-        directionDisplay.classList.add('idle');
-        await delay(1400 + Math.random() * 2400);
-        directionDisplay.classList.remove('idle');
-      }
-
-      floor += floor < CURRENT_FLOOR ? 1 : -1;
-      renderFloor(floor);
-    }
-
-    if (token !== runToken) return;
-    state = 'arrived';
-    directionDisplay.classList.add('idle');
-    await delay(620);
-    playChime();
-    await delay(760);
-    doorFrame.classList.add('open');
-    await delay(4300 + Math.random() * 1400);
-    doorFrame.classList.remove('open');
-    await delay(1850);
-
-    if (token !== runToken) return;
-    callButton.classList.remove('lit');
-    callButton.setAttribute('aria-pressed', 'false');
-    callButton.disabled = false;
-    state = 'idle';
-
-    await delay(900 + Math.random() * 1800);
-    if (state === 'idle' && token === runToken) depart(token);
-  }
-
-  async function depart(token) {
-    const target = randomFloor();
-    setDirection(target, true);
-    await delay(850);
-    while (floor !== target && state === 'idle' && token === runToken) {
-      await delay(700 + Math.random() * 650);
-      floor += floor < target ? 1 : -1;
-      renderFloor(floor);
-    }
-    if (state === 'idle' && token === runToken) directionDisplay.classList.add('idle');
-  }
-
-  callButton.addEventListener('click', () => {
+  function showNotice(text) { clearTimeout(noticeTimerRef.current); setNotice(text); noticeTimerRef.current = setTimeout(() => setNotice(''), 3200); }
+  function press(name) {
     unlockAudio();
-    if (state !== 'idle') return;
-    runToken += 1;
-    travel(runToken);
-  });
-
-  document.addEventListener('pointerdown', unlockAudio, { once: true });
-  document.addEventListener('keydown', unlockAudio, { once: true });
-  renderFloor(floor);
-  setDirection(CURRENT_FLOOR, false);
-})();
+    const now = Date.now(); pressesRef.current = [...pressesRef.current.filter(time => now - time < 2200), now];
+    if (pressesRef.current.length >= 5) showNotice(pressesRef.current.length >= 8 ? '連打しても、到着時刻は変わりません。' : '呼び出しは、すでに登録されています。');
+    if (!callsRef.current[name]) {
+      const nextCalls = { ...callsRef.current, [name]: true };
+      callsRef.current = nextCalls;
+      setCalls(nextCalls);
+    }
+    if (!runningRef.current) runController();
+  }
+  async function runController() {
+    runningRef.current = true; setMoving(true);
+    let target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR;
+    while (callsRef.current.up || callsRef.current.down) {
+      await sleep(720 + Math.random() * 480);
+      const next = floorRef.current + directionRef.current;
+      if (next > MAX_FLOOR || next < MIN_FLOOR) { directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; await sleep(1100); continue; }
+      floorRef.current = next; setFloor(next); setDisplayTick(value => value + 1);
+      if (next === HALL_FLOOR) {
+        if (shouldStop(directionRef.current, callsRef.current.up, callsRef.current.down)) {
+          setMoving(false); await sleep(600); chime(); await sleep(720); setDoorsOpen(true);
+          const served = directionRef.current > 0 ? 'up' : 'down';
+          const remaining = { ...callsRef.current, [served]: false }; callsRef.current = remaining; setCalls(remaining);
+          await sleep(4200); setDoorsOpen(false); await sleep(1750);
+          if (!(remaining.up || remaining.down)) break; setMoving(true);
+        } else {
+          showNotice(directionRef.current > 0 ? '上り運転中のため、下り呼びを通過しました。' : '下り運転中のため、上り呼びを通過しました。'); await sleep(650);
+        }
+      }
+      if (next === target) { await sleep(1300 + Math.random() * 1200); directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; }
+      else if (Math.random() < .12 && Math.abs(next - HALL_FLOOR) > 1) await sleep(1100 + Math.random() * 1700);
+    }
+    setMoving(false); runningRef.current = false;
+  }
+  return html`<main className="hall" aria-label="12階のエレベーターホール">
+    <div className="ceiling" aria-hidden="true"><span className="light light--left"></span><span className="light light--right"></span></div><div className="wall wall--left" aria-hidden="true"></div>
+    <div className="floor-plaque" aria-label="現在の階は12階"><span>12</span><small>F</small></div>
+    <section className="elevator" aria-label="エレベーター"><div className="indicator-housing"><div className="indicator" aria-live="polite"><span className="indicator-glass"></span><span key=${displayTick} className="floor-number changing">${floor}</span><span className=${`direction ${moving ? '' : 'idle'}`} aria-label=${direction > 0 ? '上昇中' : '下降中'}>${direction > 0 ? '▲' : '▼'}</span></div></div><div className="lintel"></div><div className=${`door-frame ${doorsOpen ? 'open' : ''}`}><div className="cab"><div className="cab-ceiling"><i></i><i></i></div><div className="cab-back"><span className="cab-seam"></span></div><div className="cab-floor"></div></div><div className="door door--left"><span></span></div><div className="door door--right"><span></span></div><div className="door-shadow"></div></div><div className="sill"></div></section>
+    <aside className="call-panel" aria-label="エレベーター呼び出しパネル"><button className=${`call-button ${calls.up ? 'lit' : ''}`} onClick=${() => press('up')} aria-label="上りエレベーターを呼ぶ" aria-pressed=${calls.up}><span className="button-rim"><span className="button-face"><span className="button-arrow">▲</span></span></span></button><button className=${`call-button ${calls.down ? 'lit' : ''}`} onClick=${() => press('down')} aria-label="下りエレベーターを呼ぶ" aria-pressed=${calls.down}><span className="button-rim"><span className="button-face"><span className="button-arrow">▼</span></span></span></button></aside>
+    <div className=${`building-notice ${notice ? 'show' : ''}`} role="status">${notice}</div><div className="wall wall--right"></div><div className="baseboard"></div><div className="floor"><div className="reflection"></div></div>
+  </main>`;
+}
+createRoot(document.getElementById('root')).render(html`<${App} />`);

@@ -142,8 +142,8 @@ body {
 }
 .door::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.14), transparent 17%, rgba(0,0,0,.1) 100%); }
 .door span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.28); box-shadow: 2px 0 7px rgba(0,0,0,.15); }
-.door--left { left: 3.4%; border-right: 1px solid #5e615f; } .door--left span { right: 12%; }
-.door--right { right: 3.4%; border-left: 1px solid #d4d5d2; } .door--right span { left: 12%; }
+.door--left { left: 3.4%; width: 46.6%; border-right: 1px solid #5e615f; } .door--left span { right: 12%; }
+.door--right { right: 3.4%; width: 46.6%; border-left: 1px solid #d4d5d2; } .door--right span { left: 12%; }
 .door-frame.open .door--left { transform: translateX(-100%); }
 .door-frame.open .door--right { transform: translateX(100%); }
 .door-shadow { position: absolute; z-index: 7; top: 0; bottom: 0; left: 50%; width: 7px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(0,0,0,.7), transparent); opacity: .75; transition: opacity .35s; }
@@ -153,7 +153,7 @@ body {
 
 .call-panel {
   position: absolute; z-index: 10; left: calc(50% + min(41vw, 430px)); top: 57%;
-  width: 62px; height: 114px; display: grid; place-items: center;
+  width: 68px; height: 142px; display: grid; grid-template-rows: 1fr 1fr; place-items: center;
   transform: translateY(-50%);
   border: 1px solid #777a78; border-radius: 3px;
   background:
@@ -162,8 +162,8 @@ body {
   box-shadow: inset 1px 1px rgba(255,255,255,.7), 3px 4px 8px rgba(0,0,0,.24);
 }
 
-.call-panel::before { content: ""; position: absolute; inset: 7px; border: 1px solid rgba(70,72,70,.2); }
-.call-button { position: relative; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; touch-action: manipulation; }
+.call-panel::before { content: ""; position: absolute; inset: 6px; border: 1px solid rgba(70,72,70,.2); pointer-events: none; }
+.call-button { position: relative; z-index: 2; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; touch-action: manipulation; }
 .button-rim { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(145deg, #f0f1ed 4%, #858784 47%, #4c4f4d 70%, #d7d9d5); box-shadow: 0 2px 4px rgba(0,0,0,.45); }
 .button-face { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 42% 34%, #646764, #202321 72%); box-shadow: inset 0 1px 2px rgba(255,255,255,.32), inset 0 -2px 5px #050605; transition: transform .08s, background .22s, box-shadow .22s; }
 .button-arrow { color: #9d9f9c; font-size: 14px; line-height: 1; transform: translateY(1px); text-shadow: 0 1px #000; transition: color .22s, text-shadow .22s; }
@@ -172,6 +172,26 @@ body {
 .call-button.lit .button-face { background: radial-gradient(circle at 42% 34%, #663018, #25160e 74%); box-shadow: inset 0 1px 2px #ffb366, inset 0 -2px 5px #1d0800, 0 0 8px rgba(255,88,15,.75); }
 .call-button.lit .button-arrow { color: #ff8843; text-shadow: 0 0 4px #ff4800, 0 0 10px #ff5a18; }
 .call-button:disabled { cursor: default; }
+
+.floor-plaque {
+  position: absolute; z-index: 8; left: calc(50% - min(41vw, 430px)); top: 55%;
+  width: 82px; height: 54px; display: flex; align-items: baseline; justify-content: center; gap: 3px;
+  transform: translate(-100%, -50%); border: 1px solid #7f827f; border-radius: 2px;
+  color: #3e413f; background: linear-gradient(135deg, #d3d4d0, #a5a8a4 55%, #e0e1dd);
+  box-shadow: inset 1px 1px rgba(255,255,255,.72), 2px 3px 6px rgba(0,0,0,.2);
+  font-family: Arial, sans-serif; font-weight: 300; text-shadow: 0 1px rgba(255,255,255,.5);
+}
+.floor-plaque span { font-size: 36px; line-height: 52px; letter-spacing: -.04em; }
+.floor-plaque small { font-size: 14px; }
+
+.building-notice {
+  position: fixed; z-index: 30; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom));
+  max-width: min(88vw, 440px); padding: 10px 16px; transform: translate(-50%, 14px);
+  border: 1px solid rgba(255,255,255,.22); border-radius: 3px;
+  color: rgba(255,255,255,.9); background: rgba(33,36,34,.82); box-shadow: 0 3px 12px rgba(0,0,0,.24);
+  font-size: 12px; letter-spacing: .06em; text-align: center; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; backdrop-filter: blur(5px);
+}
+.building-notice.show { opacity: 1; transform: translate(-50%, 0); }
 
 .baseboard { position: absolute; z-index: 4; left: 0; right: 0; bottom: 8.4%; height: 2.3%; background: linear-gradient(#8b8d89, #c2c3bf 45%, #666965); border-top: 1px solid #777975; box-shadow: 0 -2px 4px rgba(0,0,0,.12); }
 .floor { position: absolute; z-index: 2; left: -5%; right: -5%; bottom: -12%; height: 22%; transform-origin: bottom; transform: rotateX(56deg); overflow: hidden; background: repeating-linear-gradient(90deg, transparent 0 24.8%, rgba(51,53,51,.16) 24.9% 25%, transparent 25.1% 49.8%), repeating-linear-gradient(0deg, transparent 0 49%, rgba(47,48,46,.15) 49.4% 50%, transparent 50.4% 100%), linear-gradient(100deg, #777a75, #9b9c96 52%, #72756f); box-shadow: inset 0 15px 30px rgba(10,10,8,.26); }
@@ -188,6 +208,8 @@ body {
   .indicator-housing { width: 125px; height: 57px; }
   .floor-number { font-size: 29px; }
   .direction { font-size: 21px; }
+  .floor-plaque { left: 7px; top: 36%; width: 66px; height: 46px; transform: none; }
+  .floor-plaque span { font-size: 29px; line-height: 44px; }
 }
 
 @media (orientation: landscape) and (max-height: 720px) {
@@ -206,6 +228,7 @@ body {
   .floor-number { font-size: 29px; }
   .direction { font-size: 20px; }
   .call-panel { left: calc(50% + min(34vw, 365px)); top: 59%; transform: translateY(-50%) scale(.85); }
+  .floor-plaque { left: calc(50% - min(34vw, 365px)); top: 57%; transform: translate(-100%, -50%) scale(.85); }
   .baseboard { bottom: 6.4%; }
   .floor { height: 18%; }
 }
@@ -213,6 +236,7 @@ body {
 @media (max-width: 420px) {
   .elevator { width: 86vw; height: min(68vh, calc(100vh - 110px), 620px); }
   .call-panel { right: -7px; transform: translateY(-50%) scale(.69); }
+  .floor-plaque { left: -5px; transform: scale(.78); }
 }
 
 @media (prefers-reduced-motion: reduce) {
