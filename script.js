@@ -55,7 +55,7 @@ function App() {
     runningRef.current = true; setMoving(true);
     let target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR;
     while (callsRef.current.up || callsRef.current.down) {
-      await sleep(720 + Math.random() * 480);
+      await sleep(1350 + Math.random() * 750);
       const next = floorRef.current + directionRef.current;
       if (next > MAX_FLOOR || next < MIN_FLOOR) { directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; await sleep(1100); continue; }
       floorRef.current = next; setFloor(next); setDisplayTick(value => value + 1);
@@ -71,11 +71,11 @@ function App() {
         }
       }
       if (next === target) { await sleep(1300 + Math.random() * 1200); directionRef.current *= -1; setDirection(directionRef.current); target = directionRef.current > 0 ? MAX_FLOOR : MIN_FLOOR; }
-      else if (Math.random() < .2 && Math.abs(next - HALL_FLOOR) > 1) {
+      else if (Math.random() < .38 && Math.abs(next - HALL_FLOOR) > 1) {
         // The car has stopped at another floor for passengers. From the hall,
         // only the stationary floor display and the natural dwell time are seen.
         setMoving(false);
-        await sleep(2300 + Math.random() * 2600);
+        await sleep(2700 + Math.random() * 3000);
         setMoving(true);
       }
     }
