@@ -23,9 +23,16 @@ body {
   overflow: hidden;
   perspective: 1100px;
   background:
+    radial-gradient(ellipse at 50% 34%, rgba(255,255,255,.16), transparent 42%),
     linear-gradient(90deg, transparent 49.93%, rgba(65,60,51,.08) 50%, transparent 50.07%),
     repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, transparent 1px 5px),
     linear-gradient(180deg, #dddcd7 0%, #cbc9c3 70%, #c3c1ba 100%);
+}
+
+.hall::after {
+  content: ""; position: absolute; z-index: 25; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(33,35,31,.1) 100%);
+  mix-blend-mode: multiply;
 }
 
 .ceiling {
@@ -47,6 +54,13 @@ body {
 .light--left { left: 8%; }
 .light--right { right: 8%; }
 
+.downlight {
+  position: absolute; z-index: 2; left: 50%; top: 26%; width: 26px; height: 12px;
+  transform: translateX(-50%); border-radius: 50%; border: 1px solid #8d8f8b;
+  background: radial-gradient(ellipse, #fffef0 0 30%, #c9cbc6 48%, #777a76 72%);
+  box-shadow: 0 4px 13px rgba(255,254,225,.72);
+}
+
 .wall { position: absolute; z-index: 1; top: 10%; bottom: 18%; }
 .wall--left { left: 0; width: calc(50% - min(25vw, 265px)); }
 .wall--right { right: 0; width: calc(50% - min(25vw, 265px)); }
@@ -56,6 +70,28 @@ body {
   background: radial-gradient(ellipse at 50% 5%, rgba(255,255,255,.3), transparent 55%);
   mix-blend-mode: soft-light;
 }
+
+.wall-joint { position: absolute; z-index: 2; top: 12%; bottom: 9%; width: 1px; background: rgba(75,73,68,.16); box-shadow: 1px 0 rgba(255,255,255,.28); }
+.wall-joint--left { left: 18%; }
+.wall-joint--right { right: 17%; }
+
+.security-camera {
+  position: absolute; z-index: 7; right: 7%; top: 14%; width: 76px; height: 54px;
+  filter: drop-shadow(3px 5px 5px rgba(0,0,0,.25)); transform: rotate(-4deg);
+}
+.camera-arm { position: absolute; right: 3px; top: 4px; width: 25px; height: 10px; border-radius: 0 5px 5px 0; background: linear-gradient(#e1e2de, #8d908c); border: 1px solid #777a77; }
+.camera-arm::after { content: ""; position: absolute; right: -5px; top: -7px; width: 8px; height: 25px; background: #b8bab6; border: 1px solid #777; }
+.camera-body { position: absolute; left: 2px; top: 8px; width: 52px; height: 27px; border-radius: 9px 5px 8px 11px; background: linear-gradient(160deg, #f1f2ee, #a7aaa6 70%); border: 1px solid #757875; transform: rotate(8deg); }
+.camera-body::after { content: ""; position: absolute; left: -7px; top: 6px; width: 13px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #131514 22%, #48504d 27%, #171918 62%, #888 68%); }
+.camera-body i { position: absolute; right: 8px; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: #b41e16; box-shadow: 0 0 4px #ff2b20; }
+
+.hall-speaker {
+  position: absolute; z-index: 5; left: 7%; top: 20%; width: 70px; height: 54px;
+  display: grid; grid-template-columns: repeat(6, 4px); grid-auto-rows: 4px; gap: 4px; place-content: center;
+  border: 1px solid #92948f; border-radius: 2px; background: linear-gradient(145deg, #dadbd7, #b3b5b1);
+  box-shadow: inset 1px 1px rgba(255,255,255,.65), 2px 3px 7px rgba(0,0,0,.16);
+}
+.hall-speaker i { width: 4px; height: 4px; border-radius: 50%; background: #6d706c; box-shadow: inset 0 1px 1px rgba(0,0,0,.35); }
 
 .elevator {
   position: absolute; z-index: 9; left: 50%; bottom: 9%;
@@ -141,6 +177,7 @@ body {
   box-shadow: inset 0 0 1px #fff;
 }
 .door::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.14), transparent 17%, rgba(0,0,0,.1) 100%); }
+.door::before { content: ""; position: absolute; z-index: 1; inset: 0; opacity: .22; background: radial-gradient(ellipse at 30% 55%, rgba(255,255,255,.18), transparent 24%), radial-gradient(ellipse at 76% 22%, rgba(0,0,0,.09), transparent 18%); }
 .door span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.28); box-shadow: 2px 0 7px rgba(0,0,0,.15); }
 .door--left { left: 3.4%; width: 46.6%; border-right: 1px solid #5e615f; } .door--left span { right: 12%; }
 .door--right { right: 3.4%; width: 46.6%; border-left: 1px solid #d4d5d2; } .door--right span { left: 12%; }
@@ -173,6 +210,12 @@ body {
 .call-button.lit .button-arrow { color: #ff8843; text-shadow: 0 0 4px #ff4800, 0 0 10px #ff5a18; }
 .call-button:disabled { cursor: default; }
 
+.panel-screw { position: absolute; z-index: 3; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e1e2df, #656865 70%); box-shadow: 0 0 0 1px rgba(40,42,40,.28); }
+.panel-screw::after { content: ""; position: absolute; left: 1px; top: 2px; width: 3px; height: 1px; background: rgba(35,37,35,.55); transform: rotate(-18deg); }
+.panel-screw--tl { left: 5px; top: 5px; } .panel-screw--tr { right: 5px; top: 5px; }
+.panel-screw--bl { left: 5px; bottom: 5px; } .panel-screw--br { right: 5px; bottom: 5px; }
+.panel-mark { position: absolute; z-index: 3; bottom: 8px; left: 50%; transform: translateX(-50%); color: rgba(50,53,51,.6); font: 5px/1 Arial, sans-serif; letter-spacing: .14em; }
+
 .floor-plaque {
   position: absolute; z-index: 8; left: calc(50% - min(41vw, 430px)); top: 55%;
   width: 82px; height: 54px; display: flex; align-items: baseline; justify-content: center; gap: 3px;
@@ -183,6 +226,8 @@ body {
 }
 .floor-plaque span { font-size: 36px; line-height: 52px; letter-spacing: -.04em; }
 .floor-plaque small { font-size: 14px; }
+.floor-plaque::before, .floor-plaque::after { content: ""; position: absolute; top: 5px; width: 4px; height: 4px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e5e6e2, #777a77 72%); }
+.floor-plaque::before { left: 5px; } .floor-plaque::after { right: 5px; }
 
 .building-notice {
   position: fixed; z-index: 30; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom));
@@ -210,6 +255,8 @@ body {
   .direction { font-size: 21px; }
   .floor-plaque { left: 7px; top: 36%; width: 66px; height: 46px; transform: none; }
   .floor-plaque span { font-size: 29px; line-height: 44px; }
+  .security-camera { right: 3%; transform: scale(.75) rotate(-4deg); transform-origin: top right; }
+  .hall-speaker { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 720px) {
