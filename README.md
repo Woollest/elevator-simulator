@@ -28,7 +28,7 @@
 
 ## 技術構成
 
-詳細な境界、制御不変条件、検証方針は [`ARCHITECTURE.md`](ARCHITECTURE.md) に記録しています。Rust/Wasm採用の判断経緯は [`docs/adr/0001-rust-wasm-control-core.md`](docs/adr/0001-rust-wasm-control-core.md) にあります。
+詳細な境界、制御不変条件、検証方針は [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) に記録しています。Rust/Wasm採用の判断経緯は [`docs/adr/0001-rust-wasm-control-core.md`](docs/adr/0001-rust-wasm-control-core.md) にあります。
 
 ### React
 
@@ -65,24 +65,30 @@ WebAssemblyが読み込めなかった場合も、同じ判断を行うJavaScrip
 ```text
 .
 ├── .github/workflows/ # 自動品質ゲート
-├── docs/adr/          # Architecture Decision Records
+├── apps/web/          # React + TypeScriptフロントエンド
+│   ├── src/
+│   │   ├── audio/         # Web Audio合成エンジン
+│   │   ├── domain/        # 型とシミュレーション設定
+│   │   ├── infrastructure/# Rust/Wasm境界
+│   │   ├── simulation/    # 自動運転・NPC・扉の状態遷移
+│   │   ├── styles/        # ホールの外観
+│   │   └── ui/            # React表示コンポーネント
+│   └── index.html         # Viteエントリ
+├── crates/
+│   └── elevator-control-core/ # Rust制御クレート
+├── docs/
+│   ├── ARCHITECTURE.md # 実行境界と制御不変条件
+│   └── adr/            # Architecture Decision Records
 ├── scripts/           # 再現可能なWasmビルド
-├── src/
-│   ├── audio/         # Web Audio合成エンジン
-│   ├── domain/        # 型とシミュレーション設定
-│   ├── infrastructure/# Rust/Wasm境界
-│   ├── simulation/    # 自動運転・NPC・扉の状態遷移
-│   └── ui/            # React表示コンポーネント
 ├── tests/             # 配信WasmのABI・決定表テスト
-├── web/               # Vite用HTMLエントリ
-├── ARCHITECTURE.md    # 実行境界と制御不変条件
-├── Cargo.toml         # Rustクレート定義と最適化設定
-├── index.html          # 移行中も公開を維持する旧エントリ
-├── style.css           # ホール全体の外観とレスポンシブ表示
-├── script.js           # React UI、運転状態、音声、アニメーション
-├── elevator_core.rs    # Rust製の停止判断ロジック
-└── elevator_core.wasm  # ブラウザが実行するコンパイル済みWasm
+├── Cargo.toml         # Rustワークスペース
+├── index.html         # 公開互換用の旧エントリ
+├── style.css          # 公開互換用の旧スタイル
+├── script.js          # 公開互換用の旧ランタイム
+└── elevator_core.wasm # 公開互換用のWasm
 ```
+
+> ルートの `index.html`、`script.js`、`style.css` は現在のブランチ配信を維持するための凍結済み互換層です。新規変更は `apps/web` に行います。詳細は [`docs/LEGACY.md`](docs/LEGACY.md) を参照してください。
 
 ## ローカルで確認する
 

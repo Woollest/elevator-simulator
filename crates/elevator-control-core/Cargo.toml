@@ -1,0 +1,11 @@
+[package]
+name = "elevator-control-core"
+version = "1.0.0"
+edition = "2024"
+description = "A deliberately over-engineered collective-control decision core"
+license = "MIT"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
