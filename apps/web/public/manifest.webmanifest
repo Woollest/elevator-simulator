@@ -1,0 +1,14 @@
+{
+  "name": "エレベーター待ちシミュレーター",
+  "short_name": "Elevator",
+  "description": "日本のエレベーターホールで、ただ到着を待つシミュレーター。",
+  "start_url": "/elevator-simulator/",
+  "scope": "/elevator-simulator/",
+  "display": "standalone",
+  "background_color": "#c9c7c1",
+  "theme_color": "#242725",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

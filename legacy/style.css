@@ -264,14 +264,14 @@ body {
 .sound-hint.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 720px) {
-  .elevator { width: min(82vw, 510px); height: min(72vh, calc(100vh - 125px), 700px); bottom: 8%; }
-  .call-panel { left: auto; right: max(5px, 2vw); top: 58%; transform: translateY(-50%) scale(.82); }
+  .elevator { width: min(70vw, 420px); height: min(70vh, calc(100vh - 145px), 680px); bottom: 7%; }
+  .call-panel { left: auto; right: max(7px, 2vw); top: 58%; transform: translateY(-50%) scale(.74); transform-origin: right center; }
   .baseboard { bottom: 7.4%; }
   .floor { height: 20%; }
   .indicator-housing { width: 125px; height: 57px; }
   .floor-number { font-size: 29px; }
   .direction { font-size: 21px; }
-  .floor-plaque { left: 7px; top: 36%; width: 66px; height: 46px; transform: none; }
+  .floor-plaque { left: max(7px, 2vw); top: 42%; width: 66px; height: 46px; transform: scale(.78); transform-origin: left center; }
   .floor-plaque span { font-size: 29px; line-height: 44px; }
   .security-camera { right: 3%; transform: scale(.75) rotate(-4deg); transform-origin: top right; }
   .hall-speaker { display: none; }
@@ -299,9 +299,9 @@ body {
 }
 
 @media (max-width: 420px) {
-  .elevator { width: 86vw; height: min(68vh, calc(100vh - 110px), 620px); }
-  .call-panel { right: -7px; transform: translateY(-50%) scale(.69); }
-  .floor-plaque { left: -5px; transform: scale(.78); }
+  .elevator { width: 70vw; height: min(67vh, calc(100vh - 135px), 610px); }
+  .call-panel { right: 3px; transform: translateY(-50%) scale(.66); }
+  .floor-plaque { left: 4px; transform: scale(.7); }
 }
 
 @media (prefers-reduced-motion: reduce) {
