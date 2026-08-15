@@ -25,6 +25,9 @@
 
   function renderFloor(value) {
     floorDisplay.textContent = value === 0 ? 'B1' : String(value);
+    floorDisplay.classList.remove('changing');
+    void floorDisplay.offsetWidth;
+    floorDisplay.classList.add('changing');
   }
 
   function setDirection(targetFloor, active = true) {
