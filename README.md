@@ -87,15 +87,6 @@ rustc --target wasm32-unknown-unknown \
 
 標準ライブラリを使わない小さなコアなので、生成されるWasmは非常に軽量です。
 
-## GitHub Pagesで公開する
-
-1. ファイル一式をリポジトリの `main` ブランチへ置きます
-2. GitHubの **Settings → Pages** を開きます
-3. **Deploy from a branch** を選びます
-4. `main` と `/ (root)` を指定して保存します
-
-追加のビルドワークフローやサーバー処理は不要です。
-
 ## 調整ポイント
 
 主要な数値は `script.js` 冒頭と `runController()` 内にあります。
