@@ -237,6 +237,22 @@ body {
   font-size: 12px; letter-spacing: .06em; text-align: center; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; backdrop-filter: blur(5px);
 }
 .building-notice.show { opacity: 1; transform: translate(-50%, 0); }
+.building-notice small { display: none; margin-bottom: 7px; font: 700 9px/1 Arial, sans-serif; letter-spacing: .2em; }
+.building-notice strong { display: block; font-weight: 500; }
+.building-notice.warning { border-color: rgba(255,190,64,.45); color: #fff5d7; background: rgba(55,43,24,.9); }
+.building-notice.alarm {
+  bottom: 50%; width: min(88vw, 620px); max-width: none; padding: 25px 28px;
+  transform: translate(-50%, 50%) scale(.94); border: 2px solid #f24b3d; border-radius: 2px;
+  color: #fff; background: rgba(92,12,8,.94); box-shadow: 0 0 0 5px rgba(255,38,25,.12), 0 8px 35px rgba(0,0,0,.48);
+  font-size: clamp(17px, 2.1vw, 25px); letter-spacing: .08em; animation: alarm-pulse .52s steps(2, end) infinite;
+}
+.building-notice.alarm.show { transform: translate(-50%, 50%) scale(1); }
+.building-notice.alarm small { display: block; color: #ffb5ad; }
+
+@keyframes alarm-pulse {
+  0%, 100% { border-color: #f24b3d; filter: brightness(1); }
+  50% { border-color: #ffb0a9; filter: brightness(1.22); }
+}
 
 .baseboard { position: absolute; z-index: 4; left: 0; right: 0; bottom: 8.4%; height: 2.3%; background: linear-gradient(#8b8d89, #c2c3bf 45%, #666965); border-top: 1px solid #777975; box-shadow: 0 -2px 4px rgba(0,0,0,.12); }
 .floor { position: absolute; z-index: 2; left: -5%; right: -5%; bottom: -12%; height: 22%; transform-origin: bottom; transform: rotateX(56deg); overflow: hidden; background: repeating-linear-gradient(90deg, transparent 0 24.8%, rgba(51,53,51,.16) 24.9% 25%, transparent 25.1% 49.8%), repeating-linear-gradient(0deg, transparent 0 49%, rgba(47,48,46,.15) 49.4% 50%, transparent 50.4% 100%), linear-gradient(100deg, #777a75, #9b9c96 52%, #72756f); box-shadow: inset 0 15px 30px rgba(10,10,8,.26); }
