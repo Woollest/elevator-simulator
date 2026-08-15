@@ -24,10 +24,11 @@ function App() {
   const [notice, setNotice] = useState('');
   const [displayTick, setDisplayTick] = useState(0);
   const callsRef = useRef(calls), floorRef = useRef(floor), directionRef = useRef(direction);
-  const runningRef = useRef(false), aliveRef = useRef(true), pressesRef = useRef([]), audioRef = useRef(null), noticeTimerRef = useRef(null);
+  const runningRef = useRef(false), aliveRef = useRef(true), pressesRef = useRef([]), audioRef = useRef(null), audioGraphRef = useRef(null), noticeTimerRef = useRef(null);
   useEffect(() => { callsRef.current = calls; }, [calls]);
   useEffect(() => { floorRef.current = floor; }, [floor]);
   useEffect(() => { directionRef.current = direction; }, [direction]);
+  useEffect(() => { updateMotorSound(floor, moving); }, [floor, moving]);
   useEffect(() => {
     runController();
     return () => { aliveRef.current = false; };
@@ -35,13 +36,47 @@ function App() {
 
   function unlockAudio() {
     if (!audioRef.current) { const Ctx = window.AudioContext || window.webkitAudioContext; if (Ctx) audioRef.current = new Ctx(); }
-    audioRef.current?.resume();
+    audioRef.current?.resume().then(startAmbience);
   }
-  function chime() {
+  function noiseBuffer(context, seconds = 2) {
+    const buffer = context.createBuffer(1, context.sampleRate * seconds, context.sampleRate), data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+    return buffer;
+  }
+  function startAmbience() {
+    const context = audioRef.current; if (!context || audioGraphRef.current) return;
+    const master = context.createGain(); master.gain.value = .7; master.connect(context.destination);
+    const air = context.createBufferSource(), airFilter = context.createBiquadFilter(), airGain = context.createGain();
+    air.buffer = noiseBuffer(context); air.loop = true; airFilter.type = 'lowpass'; airFilter.frequency.value = 360; airGain.gain.value = .022;
+    air.connect(airFilter).connect(airGain).connect(master); air.start();
+    const hum = context.createOscillator(), humGain = context.createGain(); hum.type = 'sine'; hum.frequency.value = 100; humGain.gain.value = .0022; hum.connect(humGain).connect(master); hum.start();
+    const motor = context.createOscillator(), overtone = context.createOscillator(), motorGain = context.createGain();
+    motor.type = 'sine'; motor.frequency.value = 42; overtone.type = 'triangle'; overtone.frequency.value = 84; motorGain.gain.value = .0001;
+    motor.connect(motorGain); overtone.connect(motorGain); motorGain.connect(master); motor.start(); overtone.start();
+    audioGraphRef.current = { motor, overtone, motorGain };
+    updateMotorSound(floorRef.current, true);
+  }
+  function updateMotorSound(currentFloor, isMoving) {
+    const context = audioRef.current, graph = audioGraphRef.current; if (!context || !graph) return;
+    const proximity = Math.max(0, 1 - Math.abs(currentFloor - HALL_FLOOR) / 10), frequency = 36 + proximity * 18;
+    graph.motorGain.gain.cancelScheduledValues(context.currentTime);
+    graph.motorGain.gain.linearRampToValueAtTime(isMoving ? .0025 + proximity * .022 : .0001, context.currentTime + .45);
+    graph.motor.frequency.linearRampToValueAtTime(frequency, context.currentTime + .5);
+    graph.overtone.frequency.linearRampToValueAtTime(frequency * 2.03, context.currentTime + .5);
+  }
+  function chime(volume = .14, pan = 0, muffled = false) {
     const context = audioRef.current; if (!context || context.state !== 'running') return;
-    const now = context.currentTime, master = context.createGain();
-    master.gain.setValueAtTime(.0001, now); master.gain.exponentialRampToValueAtTime(.14, now + .02); master.gain.exponentialRampToValueAtTime(.0001, now + 1.55); master.connect(context.destination);
+    const now = context.currentTime, master = context.createGain(), filter = context.createBiquadFilter(), panner = context.createStereoPanner();
+    panner.pan.value = pan; filter.type = 'lowpass'; filter.frequency.value = muffled ? 720 : 4200;
+    master.gain.setValueAtTime(.0001, now); master.gain.exponentialRampToValueAtTime(volume, now + .02); master.gain.exponentialRampToValueAtTime(.0001, now + 1.55); master.connect(filter).connect(panner).connect(context.destination);
     [659.25, 987.77].forEach((frequency, index) => { const oscillator = context.createOscillator(), gain = context.createGain(); oscillator.frequency.value = frequency; gain.gain.setValueAtTime(index ? .22 : .72, now); gain.gain.exponentialRampToValueAtTime(.001, now + (index ? .9 : 1.45)); oscillator.connect(gain).connect(master); oscillator.start(now); oscillator.stop(now + 1.6); });
+  }
+  function distantDoorSound(distance, pan) {
+    const context = audioRef.current; if (!context || context.state !== 'running') return;
+    const source = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain(), panner = context.createStereoPanner(), now = context.currentTime;
+    source.buffer = noiseBuffer(context, .8); filter.type = 'bandpass'; filter.frequency.value = 280; filter.Q.value = 1.4; panner.pan.value = pan;
+    gain.gain.setValueAtTime(.0001, now); gain.gain.linearRampToValueAtTime(Math.max(.006, .024 - distance * .0015), now + .25); gain.gain.exponentialRampToValueAtTime(.0001, now + 1.3);
+    source.connect(filter).connect(gain).connect(panner).connect(context.destination); source.start(now); source.stop(now + 1.4);
   }
   function showNotice(text) { clearTimeout(noticeTimerRef.current); setNotice(text); noticeTimerRef.current = setTimeout(() => setNotice(''), 3200); }
   function press(name) {
@@ -65,7 +100,7 @@ function App() {
       floorRef.current = next; setFloor(next); setDisplayTick(value => value + 1);
       if (next === HALL_FLOOR) {
         if (shouldStop(directionRef.current, callsRef.current.up, callsRef.current.down)) {
-          setMoving(false); await sleep(600); chime(); await sleep(720); setDoorsOpen(true);
+          setMoving(false); await sleep(600); chime(.14, 0, false); await sleep(720); setDoorsOpen(true);
           const served = directionRef.current > 0 ? 'up' : 'down';
           const remaining = { ...callsRef.current, [served]: false }; callsRef.current = remaining; setCalls(remaining);
           await sleep(4200); setDoorsOpen(false); await sleep(1750);
@@ -79,6 +114,10 @@ function App() {
         // The car has stopped at another floor for passengers. From the hall,
         // only the stationary floor display and the natural dwell time are seen.
         setMoving(false);
+        const distance = Math.abs(next - HALL_FLOOR), side = directionRef.current > 0 ? .48 : -.48;
+        chime(Math.max(.012, .052 - distance * .003), side, true);
+        await sleep(520);
+        distantDoorSound(distance, side);
         await sleep(2700 + Math.random() * 3000);
         setMoving(true);
       }
